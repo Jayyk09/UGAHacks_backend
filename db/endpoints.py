@@ -8,7 +8,20 @@ import json
 load_dotenv()
 PINATA_JWT = os.getenv("PINATA_JWT")
 
-def fetch_all_files():
+def trying():
+    url = "https://gateway.pinata.cloud/ipfs/jade-petite-jay-124.mypinata.cloud/bafkreiby2q3b7afqhk76jvycycnfns7ngyljexcsp4j47mrcbbpirmy5mq"
+    headers = {"Authorization": f"Bearer {PINATA_JWT}"}
+
+    response = requests.request("GET", url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        print(data)
+        return data
+    else:
+        print(f"Failed to fetch files. Status code: {response.status_code}")
+        return None
+
+def get_all_files():
     url = "https://api.pinata.cloud/v3/files"
     headers = {"Authorization": f"Bearer {PINATA_JWT}"}
 
@@ -84,5 +97,6 @@ if __name__ == "__main__":
     # create_new_user("224031230", {"keys": "valuesss"})
     # fetch_all_files()
     # get_files_by_number("2240000")
-    get_all_users()
+    # get_all_users()
+    trying()
 
