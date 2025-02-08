@@ -108,7 +108,6 @@ def create_and_upload(phone_number, core_data):
         return None
 
     return {
-        group_id,
         core_id,
         core_cid,
         index_id,
@@ -120,6 +119,6 @@ if __name__ == "__main__":
     print("Starting test...")
     group_id, core_id, core_cid, index_id, index_cid = create_and_upload("123123123", {"keys": "values"})
     if group_id and core_id and core_cid and index_id and index_cid:
-        update_users_json("123123123", group_id, core_id, core_cid, index_id, index_cid)
+        update_users_json("123123123", core_id, core_cid, index_id, index_cid)
     else:
         print("Test failed.")

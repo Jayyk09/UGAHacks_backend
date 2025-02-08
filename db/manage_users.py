@@ -11,8 +11,8 @@ PINATA_JWT = os.getenv("PINATA_JWT")
 JSON_FILE = "cid.json"
 USERS_JSON_ID = "users.json"
 
-def update_users_json(number, group_id, core_id, core_cid, index_id, index_cid):
-    print(number, group_id, core_id, core_cid, index_id, index_cid)
+def update_users_json(number, core_id, core_cid, index_id, index_cid):
+    print(number, core_id, core_cid, index_id, index_cid)
     print(f"Updating users.json for number: {number}")
     users_id = fetch_id(USERS_JSON_ID)
     print(f"Fetched users_id: {users_id}")
@@ -23,12 +23,13 @@ def update_users_json(number, group_id, core_id, core_cid, index_id, index_cid):
                "Content-Type": "application/json"}
 
     keyvalues = {
-        "group_id": "ccccccccc",
-        "core_id": "0194e653-a9e8-71db-ad14-0bad6a0a1875",
-        "core_cid": "0194e653-a9e8-71db-ad14-0bad6a0a1875",
+        "core_id": core_id,
+        "core_cid": core_cid,
         "index_id": index_id,
         "index_cid": index_cid
     }
+
+    print(json.dumps(keyvalues, indent=2))
 
     payload = {
         "name": "users.json",
@@ -122,7 +123,7 @@ if __name__ == "__main__":
     #     print("Failed to create users.json")
     # update_users_json(id)
     # get_user("0194e678-2232-70a6-82ff-03d8650550fa")
-    update_users_json("2247707770", "0194e653-a9e8-71db-ad14-0bad6a0a1875", "0194e646-211c-7027-8728-ab3e3bb6de8c", "bafkreibazhtqmj5tuuvomxjmbfingfyytezx2qrpbhsj6xbvjyydndwa6u", "0194e653-ac2e-75c7-b76c-09f126f52e34", "bafkreicecnx2gvntm6fbcrvnc336qze6st5u7qq7457igegamd3bzkx7ri")
+    # update_users_json("2247707770", "0194e653-a9e8-71db-ad14-0bad6a0a1875", "0194e646-211c-7027-8728-ab3e3bb6de8c", "bafkreibazhtqmj5tuuvomxjmbfingfyytezx2qrpbhsj6xbvjyydndwa6u", "0194e653-ac2e-75c7-b76c-09f126f52e34", "bafkreicecnx2gvntm6fbcrvnc336qze6st5u7qq7457igegamd3bzkx7ri")
     pass
 
 # def check_and_delete_json():
