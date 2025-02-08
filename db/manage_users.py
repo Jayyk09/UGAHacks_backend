@@ -54,12 +54,8 @@ def update_ipns(key, new_cid):
     except Exception as e:
         print(f"Failed to write CID to {JSON_FILE}: {e}")
 
-def fetch_users_json():
-    """Fetches the latest users.json from IPFS."""
+def get_user():
     latest_cid = fetch_cid(IPNS_KEY_NAME)
-    if not latest_cid:
-        print("Not able to fetch users.json. Using empty users.json")
-        return {}
 
     ipfs_url = f"https://api.pinata.cloud/v3/files/{latest_cid}"
     response = requests.get(ipfs_url)
@@ -69,43 +65,27 @@ def fetch_users_json():
         return response.json()
     else:
         return {}
+    
+def create_user(raw_json):
+    url = "https://uploads.pinata.cloud/v3/files"
+    headers = {
+        "Authorization": f"Bearer {PINATA_JWT}"
+    }
 
-def post_users_json(raw_json):
-    """
-    Uploads updated users.json directly to Pinata (IPFS) without creating a file.
-    
-    - `json_data`: The updated users.json data (Python dictionary)
-    
-    Returns:
-    - New CID of the uploaded file (str) if successful
-    - None if the upload fails
-    """
     json_bytes = json.dumps(raw_json, indent=4).encode("utf-8")
     json_io = io.BytesIO(json_bytes)
+    files = {"file": ("users.json", json_io)}
 
-    files = {"file": ("users.json", json_io)}  # Simulate a file upload
-
-    # Define metadata
     metadata = {
         "pinataMetadata": {
             "name": "users.json",
-            "keyvalues": {
-                "version": "1.0",
-                "description": "User group CIDs"
-            }
         }
     }
 
-    response = requests.post(PINATA_UPLOAD_URL, headers=HEADERS, files=files, json={"pinataMetadata": json.dumps(metadata)})
-    
-    if response.status_code == 200:
-        new_cid = response.json().get("IpfsHash")
-        print(f"File uploaded successfully. New CID: {new_cid}")
-        return new_cid
-    else:
-        print(f"Failed to upload file. Status code: {response.status_code}")
-        print(response.json())
-        return None
+    response = requests.post(url, headers=headers, files=files, json=metadata)
+    response_json = response.json()
+
+    return response_json['data']['id']
 
 def update_users_json(action, user_key, value=None):
     """
@@ -173,4 +153,4 @@ if __name__ == "__main__":
     # if action == "upsert":
     #     value = input("Enter new CID/IPNS key: ").strip()
     # update_users_json(action, user_key, value)
-    post_user()
+    post_user({"test": "test"})
