@@ -44,7 +44,9 @@ def upload_file(file_name, data, group_id):
     metadata = {
         "pinataMetadata": {
             "name": file_name,
-            "keyvalues": keyvalues
+            "keyvalues": {
+                "group_id": group_id,
+            }
         }
     }
 
@@ -97,28 +99,23 @@ def create_and_upload(phone_number, core_data):
     if not group_id:
         print("Failed to create group.")
         return None
-
-    index_data = {}
     
     core_id, core_cid = upload_file("core.json", core_data, group_id)
-    index_id, index_cid = upload_file("index.json", index_data, group_id)
 
-    if not core_id or not index_id:
+    if not core_id:
         print("Failed to upload all files.")
         return None
 
     return {
         core_id,
         core_cid,
-        index_id,
-        index_cid
     }
 
 # Testing
 if __name__ == "__main__":
     print("Starting test...")
-    group_id, core_id, core_cid, index_id, index_cid = create_and_upload("123123123", {"keys": "values"})
-    if group_id and core_id and core_cid and index_id and index_cid:
-        update_users_json("123123123", core_id, core_cid, index_id, index_cid)
+    group_id, core_id, core_cid = create_and_upload("123123123", {"keys": "values"})
+    if group_id and core_id and core_cid:
+        update_users_json("123123123", core_id, core_cid)
     else:
         print("Test failed.")
