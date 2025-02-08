@@ -1,24 +1,34 @@
-import subprocess
+import json
+import os
 
-def fetch_cid(ipfs_key):
-    """Resolves an IPNS key and returns the latest CID."""
+JSON_FILE = "cid.json"
+
+def fetch_cid(key):
+    """Fetches the CID for the given key from the local JSON file."""
     try:
-        result = subprocess.run(["ipfs", "name", "resolve", ipfs_key], capture_output=True, text=True)
+        # Check if the JSON file exists
+        if os.path.exists(JSON_FILE):
+            with open(JSON_FILE, "r") as f:
+                data = json.load(f)
 
-        if result.returncode == 0:
-            latest_cid = result.stdout.strip().replace("/ipfs/", "")
-            print(f"IPNS Key '{ipfs_key}' points to CID: {latest_cid}")
-            return latest_cid
+            # Check if the key exists in the JSON data
+            if key in data:
+                latest_cid = data[key]
+                print(f"Key '{key}' points to CID: {latest_cid}")
+                return latest_cid
+            else:
+                print(f"Key '{key}' not found in {JSON_FILE}.")
+                return None
         else:
-            print(f"Error resolving IPNS ({ipfs_key}):", result.stderr)
+            print(f"{JSON_FILE} does not exist.")
             return None
     except Exception as e:
-        print("Failed to run IPFS command:", e)
+        print(f"Failed to read {JSON_FILE}: {e}")
         return None
-    
-# Testing
+
+# Example usage
 if __name__ == "__main__":
-    ipns_key = input("Enter IPNS key: ").strip()
-    cid = fetch_cid(ipns_key)
+    key = input("Enter the key (e.g., 'users.json'): ").strip()
+    cid = fetch_cid("cid.json", key)
     if cid:
         print(f"🔹 Resolved CID: {cid}")
