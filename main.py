@@ -63,7 +63,7 @@ async def handle_webhook(request: Request):
         elif event_type == "call_ended":
             print(f"Call ended: {call_id}, from: {post_data['data'].get('from_number')}")
         elif event_type == "call_analyzed":
-            print("Analyzed call data:", format_conversation(post_data))
+            print("Analyzed call data:", post_data)
         else:
             print("Unknown event received:", event_type)
         
