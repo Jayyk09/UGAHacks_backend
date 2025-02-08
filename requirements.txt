@@ -1,0 +1,12 @@
+retell-sdk
+langchain_community
+PyPDF2
+langchain
+langchain_huggingface
+faiss-cpu
+openai
+sentence-transformers
+uvicorn
+fastapi
+python-dotenv
+fastapi[standard]
