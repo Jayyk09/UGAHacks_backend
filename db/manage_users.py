@@ -2,75 +2,18 @@ import requests
 import os
 import json
 from dotenv import load_dotenv
-from fetch_cid import fetch_cid
+from fetch_id import fetch_id
 import io
 from delete_file import delete_file
 
-# Load API keys
 load_dotenv()
 PINATA_JWT = os.getenv("PINATA_JWT")
-PINATA_UPLOAD_URL = "https://uploads.pinata.cloud/v3/files"
-HEADERS = {"Authorization": f"Bearer {PINATA_JWT}"}
 JSON_FILE = "cid.json"
+USERS_JSON_ID = "users.json"
 
-# Define the IPNS key name for users.json
-IPNS_KEY_NAME = "users.json"
-
-def check_and_delete_json():
-    # Check if the file exists
-    if os.path.exists(JSON_FILE):
-        with open(JSON_FILE, "r") as f:
-            data = json.load(f)
-            if "users.json" in data:
-                cid = data["users.json"]
-                delete_file(cid)
-                print(f"Deleted users.json with CID: {cid}")
-                return True
-    else:
-        print(f"{JSON_FILE} does not exist.")
-
-def update_ipns(key, new_cid):
-    """
-    Updates the local JSON file with the new CID associated with a given key.
-    - `json_file`: The path to the JSON file (e.g., 'cid.json').
-    - `key`: The key in the JSON file (e.g., 'users.json').
-    - `new_cid`: The new CID to store under the key.
-    """    
-    if os.path.exists(JSON_FILE):
-        with open(JSON_FILE, "r") as f:
-            data = json.load(f)
-    else:
-        data = {}  # If the file doesn't exist, create an empty dictionary
-    
-    # Update or insert the new CID for the given key
-    data[key] = new_cid
-    print(f"Updated {key} to {new_cid}")
-
-    # Write the updated data back to the JSON file
-    try:
-        with open(JSON_FILE, "w") as f:
-            json.dump(data, f, indent=4)
-        print(f"CID successfully written to {JSON_FILE}")
-    except Exception as e:
-        print(f"Failed to write CID to {JSON_FILE}: {e}")
-
-def get_user():
-    latest_cid = fetch_cid(IPNS_KEY_NAME)
-
-    ipfs_url = f"https://api.pinata.cloud/v3/files/{latest_cid}"
-    response = requests.get(ipfs_url)
-
-    if response.status_code == 200:
-        print("Fetched users.json successfully.")
-        return response.json()
-    else:
-        return {}
-    
-def create_user(raw_json):
+def create_users_json(raw_json):
     url = "https://uploads.pinata.cloud/v3/files"
-    headers = {
-        "Authorization": f"Bearer {PINATA_JWT}"
-    }
+    headers = {"Authorization": f"Bearer {PINATA_JWT}"}
 
     json_bytes = json.dumps(raw_json, indent=4).encode("utf-8")
     json_io = io.BytesIO(json_bytes)
@@ -79,6 +22,8 @@ def create_user(raw_json):
     metadata = {
         "pinataMetadata": {
             "name": "users.json",
+            "keyvalues": {
+            }
         }
     }
 
@@ -87,63 +32,61 @@ def create_user(raw_json):
 
     return response_json['data']['id']
 
-def update_users_json(action, user_key, value=None):
-    """
-    Handles updating or deleting entries in users.json without creating a file.
-    
-    - `action`: "upsert" (modify/add entry) or "delete" (remove entry)
-    - `key`: The user or group identifier (e.g., "user_123" or "group_1")
-    - `value`: The new CID/IPNS key for the user/group (only for updates)
-    """
-    raw_json = fetch_users_json()
-
-    if action == "upsert":
-        check_and_delete_json()
-
-        raw_json[user_key] = value
-        print(f"Updated {user_key} to {value}")
-    elif action == "delete":
-        check_and_delete_json()
-
-        del raw_json[user_key]
-        print(f"Deleted {user_key}")
+def update_id_json(new_id):
+    if os.path.exists(JSON_FILE):
+        with open(JSON_FILE, "r") as f:
+            data = json.load(f)
     else:
-        print("Invalid action. Use 'upsert' or 'delete'.")
-        return
+        data = {}
+    
+    data["users.json"] = new_id
 
-    new_cid = post_user(raw_json)
-    if new_cid:
-        update_ipns(IPNS_KEY_NAME, new_cid)
+    try:
+        with open(JSON_FILE, "w") as f:
+            json.dump(data, f, indent=4)
+        print(f"ID successfully written to {JSON_FILE}")
+    except Exception as e:
+        print(f"Failed to write ID to {JSON_FILE}: {e}")
 
-def post_user():
-    # Define API endpoint and authentication
-    url = "https://uploads.pinata.cloud/v3/files"
-    headers = {
-        "Authorization": f"Bearer {PINATA_JWT}"
-    }
-
-    # JSON content
+def update_users_json(id):
+    url = f"https://api.pinata.cloud/v3/files/{id}"
+    headers = {"Authorization": f"Bearer {PINATA_JWT}",
+               "Content-Type": "application/json"}
+    
     json_data = {
-        "user_id": "12345",
         "name": "John Doe",
-        "health_records": [
-            {"date": "2025-02-08", "diagnosis": "Healthy"}
-        ]
+        "age": 30,
+        "health_data": {
+            "blood_type": "O+",
+            "allergies": ["Peanuts", "Dust"],
+        }
     }
 
-    # Convert JSON to a file-like object in memory
-    json_bytes = io.BytesIO(json.dumps(json_data).encode("utf-8"))
-
-    # Prepare the request
-    files = {
-        "file": ("health_data.json", json_bytes, "application/json"),  # Sending as an actual file
+    payload = {
+        "name": "users.json",
+        "keyvalues": {
+            "p": "poop",
+            "json_data": json.dumps(json_data)
+        }
     }
+    
+    response = requests.put(url, json=payload, headers=headers)
 
-    # Send the request
-    response = requests.post(url, headers=headers, files=files)
+    print(response.json())
 
-    print(response.json())  # This returns the CID
+def get_user(latest_id):
+    # latest_id = fetch_id(USERS_JSON_ID)
 
+    users_json = f"https://api.pinata.cloud/v3/files/{latest_id}"
+    headers = {"Authorization": f"Bearer {PINATA_JWT}"}
+    response = requests.get(users_json, headers=headers)
+
+    if response.status_code == 200:
+        print("Fetched users.json successfully.")
+        print(response.json())
+        return response.json()
+    else:
+        return {}
 
 # Testing
 if __name__ == "__main__":
@@ -152,5 +95,46 @@ if __name__ == "__main__":
     # value = None
     # if action == "upsert":
     #     value = input("Enter new CID/IPNS key: ").strip()
-    # update_users_json(action, user_key, value)
-    post_user({"test": "test"})
+    # update_users(action, user_key, value)
+    # create_user({"test": "test"})
+
+    # id = create_users_json({})
+    # update_id_json(id)
+    # update_users_json(id)
+    get_user("0194e5b5-8428-7a85-8a6e-8ddcbda002d3")
+
+
+
+# def check_and_delete_json():
+#     # Check if the file exists
+#     if os.path.exists(JSON_FILE):
+#         with open(JSON_FILE, "r") as f:
+#             data = json.load(f)
+#             if "users.json" in data:
+#                 id = data["users.json"]
+#                 delete_file(id)
+#                 print(f"Deleted users.json with CID: {id}")
+#                 return True
+#     else:
+#         print(f"{JSON_FILE} does not exist.")
+
+# def update_users(action, user_key, value=None):
+#     raw_json = get_user()
+
+#     if action == "upsert":
+#         check_and_delete_json()
+
+#         raw_json[user_key] = value
+#         print(f"Updated {user_key} to {value}")
+#     elif action == "delete":
+#         check_and_delete_json()
+
+#         del raw_json[user_key]
+#         print(f"Deleted {user_key}")
+#     else:
+#         print("Invalid action. Use 'upsert' or 'delete'.")
+#         return
+
+#     new_id = create_user(raw_json)
+#     if new_id:
+#         update_id_json(new_id)

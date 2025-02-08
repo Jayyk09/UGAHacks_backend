@@ -3,7 +3,7 @@ import os
 
 JSON_FILE = "cid.json"
 
-def fetch_cid(key):
+def fetch_id(key):
     """Fetches the CID for the given key from the local JSON file."""
     try:
         # Check if the JSON file exists
@@ -29,6 +29,6 @@ def fetch_cid(key):
 # Example usage
 if __name__ == "__main__":
     key = input("Enter the key (e.g., 'users.json'): ").strip()
-    cid = fetch_cid("cid.json", key)
+    cid = fetch_id("cid.json", key)
     if cid:
         print(f"🔹 Resolved CID: {cid}")
