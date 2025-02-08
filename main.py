@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from retell import Retell
 from custom_types import ConfigResponse, ResponseRequiredRequest
 from llm import LLMClient
+from nutritionix import get_exercise_info, get_food_info, get_macros, get_micros
 
 # Load environment variables
 load_dotenv(override=True)
@@ -42,36 +43,56 @@ app.add_middleware(
 #         "timestamp": timestamp,
 #     }
 
+# Handle webhook from Retell server. This is used to receive events from Retell server.
+# Including call_started, call_ended, call_analyzed
 @app.post("/webhook")
 async def handle_webhook(request: Request):
-    """Handles incoming webhook events from Retell."""
     try:
         post_data = await request.json()
         valid_signature = retell.verify(
             json.dumps(post_data, separators=(",", ":"), ensure_ascii=False),
-            api_key=os.getenv("RETELL_API_KEY"),
+            api_key=str(os.environ["RETELL_API_KEY"]),
             signature=str(request.headers.get("X-Retell-Signature")),
         )
         if not valid_signature:
-            print("Unauthorized event received", post_data.get("event"))
+            print(
+                "Received Unauthorized",
+                post_data["event"],
+                post_data["data"]["call_id"],
+            )
             return JSONResponse(status_code=401, content={"message": "Unauthorized"})
-        
-        event_type = post_data.get("event")
-        call_id = post_data.get("data", {}).get("call_id", "unknown")
-        
-        if event_type == "call_started":
-            print(f"Call started: {call_id}, from: {post_data['data'].get('from_number')}")
-        elif event_type == "call_ended":
-            print(f"Call ended: {call_id}, from: {post_data['data'].get('from_number')}")
-        elif event_type == "call_analyzed":
-            print("Analyzed call data:", post_data)
+        if post_data["event"] == "call_started":
+            print("Call started event", post_data['call']['from_number'])
+        elif post_data["event"] == "call_ended":
+            print("Call ended event", post_data)
+        elif post_data["event"] == "call_analyzed":
+            print("Call analyzed event", post_data['call']['transcript_object'])
+            # Extract food items from the analysis
+            food_items = post_data['call']['call_analysis']['custom_analysis_data']['meals']
+            exercises = post_data['call']['call_analysis']['custom_analysis_data']['exercise']
+            medications = post_data['call']['call_analysis']['custom_analysis_data']['medications_taken']
+            
+            print(f"Food items: {food_items}")
+            print(f"Exercises: {exercises}")
+            print(f"medications_taken: {medications}")
+            
+            # TODO: Call Nutritionix API to get nutrition data for each food item
+            if food_items != '':
+                food_info = get_food_info(food_items)
+                print(f"Food info: {food_info}")
+            if medications != '':
+                print(f"Medications: {medications}")
+            if exercises != '':
+                exercise_info = get_exercise_info(exercises)
+                print(f"Exercises: {exercise_info}")
         else:
-            print("Unknown event received:", event_type)
-        
+            print("Unknown event", post_data["event"])
         return JSONResponse(status_code=200, content={"received": True})
     except Exception as err:
-        print(f"Error handling webhook: {err}")
-        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+        print(f"Error in webhook: {err}")
+        return JSONResponse(
+            status_code=500, content={"message": "Internal Server Error"}
+        )
 
 @app.websocket("/llm-websocket/{call_id}")
 async def websocket_handler(websocket: WebSocket, call_id: str):

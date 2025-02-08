@@ -197,7 +197,6 @@ def get_food_info(info):
     """
     try:
         data = _post_request('natural/nutrients', info)
-        results = []
         mapping = {
             203: 'Protein', 204: 'Fat', 205: 'Carbs', 208: 'Calories', 320: 'Vitamin A',
             401: 'Vitamin C', 324: 'Vitamin D', 323: 'Vitamin E', 430: 'Vitamin K',
@@ -207,22 +206,26 @@ def get_food_info(info):
             304: 'Magnesium', 310: 'Manganese', 305: 'Phosphorus',
             317: 'Selenium', 309: 'Zinc', 306: 'Potassium', 307: 'Sodium'
         }
+        
+        # Initialize totals dictionary with zeros
+        totals = {nutrient: 0 for nutrient in mapping.values()}
+        
+        # Sum up nutrients from all foods
         for food in data.get('foods', []):
-            info_dict = {}
             for nutrient in food.get('full_nutrients', []):
                 attr = nutrient.get('attr_id')
                 value = nutrient.get('value', 0)
                 if attr in mapping:
                     if attr == 324:
-                        info_dict[mapping[attr]] = value * 40
+                        totals[mapping[attr]] += value * 40  # convert IU to mcg
                     elif attr == 312:
-                        info_dict[mapping[attr]] = value / 1000 # convert mg to mcg
+                        totals[mapping[attr]] += value / 1000  # convert mg to mcg
                     elif attr == 313:
-                        info_dict[mapping[attr]] = value * 1000 # convert mcg to mg
+                        totals[mapping[attr]] += value * 1000  # convert mcg to mg
                     else:
-                        info_dict[mapping[attr]] = value
-            results.append(info_dict)
-        return results
+                        totals[mapping[attr]] += value
+                        
+        return [totals]  # Return as list to maintain API compatibility
     except Exception as error:
         return {"error": str(error)}
 
@@ -240,12 +243,12 @@ def get_exercise_info(query="ran 3 miles"):
     """
     try:
         data = _post_request('natural/exercise', query)
-        exercises = []
+        results = []
         for exercise in data.get('exercises', []):
-            exercises.append({
-                "Name": exercise.get("name"),
-                "Calories Burned": exercise.get('nf_calories')
-            })
-        return exercises
+            exercise_info = {}
+            exercise_info['Name'] = exercise.get('name')
+            exercise_info['Calories Burned'] = exercise.get('nf_calories')
+            results.append(exercise_info)
+        return results
     except Exception as error:
         return {"error": str(error)}
