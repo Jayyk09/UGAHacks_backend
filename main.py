@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from retell import Retell
 from custom_types import ConfigResponse, ResponseRequiredRequest
 from llm import LLMClient
-from nutritionix import get_food_info, get_macros, get_micros
+from nutritionix import get_exercise_info, get_food_info, get_macros, get_micros
 
 # Load environment variables
 load_dotenv(override=True)
@@ -80,6 +80,11 @@ async def handle_webhook(request: Request):
             if food_items != '':
                 food_info = get_food_info(food_items)
                 print(f"Food info: {food_info}")
+            if medications != '':
+                print(f"Medications: {medications}")
+            if exercises != '':
+                exercise_info = get_exercise_info(exercises)
+                print(f"Exercises: {exercise_info}")
         else:
             print("Unknown event", post_data["event"])
         return JSONResponse(status_code=200, content={"received": True})

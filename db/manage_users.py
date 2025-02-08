@@ -9,6 +9,8 @@ from delete_file import delete_file
 # Load API keys
 load_dotenv()
 PINATA_JWT = os.getenv("PINATA_JWT")
+PINATA_UPLOAD_URL = "https://uploads.pinata.cloud/v3/files"
+HEADERS = {"Authorization": f"Bearer {PINATA_JWT}"}
 JSON_FILE = "cid.json"
 
 # Define the IPNS key name for users.json
@@ -59,7 +61,7 @@ def fetch_users_json():
         print("Not able to fetch users.json. Using empty users.json")
         return {}
 
-    ipfs_url = f"https://gateway.pinata.cloud/ipfs/{latest_cid}"
+    ipfs_url = f"https://api.pinata.cloud/v3/files/{latest_cid}"
     response = requests.get(ipfs_url)
 
     if response.status_code == 200:
@@ -69,6 +71,15 @@ def fetch_users_json():
         return {}
 
 def post_users_json(raw_json):
+    """
+    Uploads updated users.json directly to Pinata (IPFS) without creating a file.
+    
+    - `json_data`: The updated users.json data (Python dictionary)
+    
+    Returns:
+    - New CID of the uploaded file (str) if successful
+    - None if the upload fails
+    """
     json_bytes = json.dumps(raw_json, indent=4).encode("utf-8")
     json_io = io.BytesIO(json_bytes)
 
@@ -95,21 +106,6 @@ def post_users_json(raw_json):
         print(f"Failed to upload file. Status code: {response.status_code}")
         print(response.json())
         return None
-    
-def post_user(raw_json):
-    url = "https://uploads.pinata.cloud/v3/files"
-    headers = {
-        "Authorization": f"Bearer {PINATA_JWT}"
-    }
-
-    json_bytes = json.dumps(raw_json, indent=4).encode("utf-8")
-    json_io = io.BytesIO(json_bytes)
-    files = {"file": ("users.json", json_io)}
-
-    response = requests.post(url, headers=headers, files=files)
-
-    print(response.json())
-    return response.json()
 
 def update_users_json(action, user_key, value=None):
     """
@@ -135,9 +131,39 @@ def update_users_json(action, user_key, value=None):
         print("Invalid action. Use 'upsert' or 'delete'.")
         return
 
-    new_cid = post_users_json(raw_json)
+    new_cid = post_user(raw_json)
     if new_cid:
         update_ipns(IPNS_KEY_NAME, new_cid)
+
+def post_user():
+    # Define API endpoint and authentication
+    url = "https://uploads.pinata.cloud/v3/files"
+    headers = {
+        "Authorization": f"Bearer {PINATA_JWT}"
+    }
+
+    # JSON content
+    json_data = {
+        "user_id": "12345",
+        "name": "John Doe",
+        "health_records": [
+            {"date": "2025-02-08", "diagnosis": "Healthy"}
+        ]
+    }
+
+    # Convert JSON to a file-like object in memory
+    json_bytes = io.BytesIO(json.dumps(json_data).encode("utf-8"))
+
+    # Prepare the request
+    files = {
+        "file": ("health_data.json", json_bytes, "application/json"),  # Sending as an actual file
+    }
+
+    # Send the request
+    response = requests.post(url, headers=headers, files=files)
+
+    print(response.json())  # This returns the CID
+
 
 # Testing
 if __name__ == "__main__":
@@ -147,4 +173,4 @@ if __name__ == "__main__":
     # if action == "upsert":
     #     value = input("Enter new CID/IPNS key: ").strip()
     # update_users_json(action, user_key, value)
-    post_user({"test": "test"})
+    post_user()
