@@ -1,11 +1,15 @@
 import requests
-
+from dotenv import load_dotenv
+import os
+load_dotenv(override=True)
 # Constants
+X_KEY = os.getenv("X_KEY")
+X_ID = os.getenv("X_ID")
 BASE_URL = 'https://trackapi.nutritionix.com/v2/'
 HEADERS = {
     'Content-Type': 'application/json',
-    'x-app-id': '45285cc0',
-    'x-app-key': 'fabe371ce59f86a7cd1dd2efb37b894e',
+    'x-app-id': X_ID,
+    'x-app-key': X_KEY,
 }
 
 def _post_request(endpoint, query):

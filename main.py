@@ -174,22 +174,21 @@ class CallRequest(BaseModel):
     from_number: str  # Required
     name: str  # Required (was incorrectly `batch_name`)
     tasks: list[CallTask]  # Required (was incorrectly `contacts`)
+    trigger_timestamp: int
 
-def schedule_batch_call(from_number, name, tasks):
-    
-
+def schedule_batch_call(from_number, name, tasks, trigger_timestamp):
     batch_call_response = retell.batch_call.create_batch_call(
         name=name,
         from_number=from_number,
-        tasks=tasks
+        tasks=tasks,
+        trigger_timestamp=trigger_timestamp
     )
     print(batch_call_response.batch_call_id)
-        
     return ("success", batch_call_response)
 
 @app.post("/schedule_call")
 def schedule_call(request: CallRequest):
-    response = schedule_batch_call(request.from_number, request.name, request.tasks)
+    response = schedule_batch_call(request.from_number, request.name, request.tasks, request.trigger_timestamp)
     return {"status": "success", "data": response}
 
 
