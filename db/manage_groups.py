@@ -34,7 +34,7 @@ def create_group(phone_number):
         print(response.json())
         return None
 
-def upload_file(file_name, data, group_id):
+def upload_file(file_name, data, group_id, phone_number):
     print(f"Uploading file: {file_name} to group: {group_id}")
     keyvalues = {
         key: json.dumps(value) if isinstance(value, dict) else value
@@ -45,7 +45,7 @@ def upload_file(file_name, data, group_id):
         "pinataMetadata": {
             "name": file_name,
             "keyvalues": {
-                "group_id": group_id,
+                "group_id": phone_number,
             }
         }
     }
@@ -100,7 +100,7 @@ def create_and_upload(phone_number, core_data):
         print("Failed to create group.")
         return None
     
-    core_id, core_cid = upload_file("core.json", core_data, group_id)
+    core_id, core_cid = upload_file("core.json", core_data, group_id, phone_number)
 
     if not core_id:
         print("Failed to upload all files.")
