@@ -11,8 +11,8 @@ PINATA_JWT = os.getenv("PINATA_JWT")
 JSON_FILE = "cid.json"
 USERS_JSON_ID = "users.json"
 
-def update_users_json(number, core_id, core_cid, index_id, index_cid):
-    print(number, core_id, core_cid, index_id, index_cid)
+def update_users_json(number, core_id, core_cid):
+    print(number, core_id, core_cid)
     print(f"Updating users.json for number: {number}")
     users_id = fetch_id(USERS_JSON_ID)
     print(f"Fetched users_id: {users_id}")
@@ -25,8 +25,6 @@ def update_users_json(number, core_id, core_cid, index_id, index_cid):
     keyvalues = {
         "core_id": core_id,
         "core_cid": core_cid,
-        "index_id": index_id,
-        "index_cid": index_cid
     }
 
     print(json.dumps(keyvalues, indent=2))
