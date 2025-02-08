@@ -239,12 +239,12 @@ def get_exercise_info(query="ran 3 miles"):
     """
     try:
         data = _post_request('natural/exercise', query)
-        exercises = []
+        results = []
         for exercise in data.get('exercises', []):
-            exercises.append({
-                "Name": exercise.get("name"),
-                "Calories Burned": exercise.get('nf_calories')
-            })
-        return exercises
+            exercise_info = {}
+            exercise_info['Name'] = exercise.get('name')
+            exercise_info['Calories Burned'] = exercise.get('nf_calories')
+            results.append(exercise_info)
+        return results
     except Exception as error:
         return {"error": str(error)}
