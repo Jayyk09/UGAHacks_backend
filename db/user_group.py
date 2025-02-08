@@ -3,94 +3,123 @@ import os
 from dotenv import load_dotenv
 import json
 import io
+from manage_users import update_users_json
 
 # Load API key from .env file
 load_dotenv()
 PINATA_JWT = os.getenv("PINATA_JWT")
 
-def create_group(group_name):
-
+def create_group(phone_number):
+    print(f"Creating group with name: {phone_number}")
     url = "https://api.pinata.cloud/v3/files/groups"
     headers = {
         "Authorization": f"Bearer {PINATA_JWT}",
         "Content-Type": "application/json"
     }
-    payload = {"name": group_name}
+    payload = {"name": phone_number}
 
-    response = requests.request("POST", url, json=payload, headers=headers)
+    try:
+        response = requests.request("POST", url, json=payload, headers=headers)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+        return None
 
     if response.status_code == 200:
         group_data = response.json()
-        print(f"Group '{group_name}' created successfully.")
-        return group_data.get("id")
+        print(f"Group '{phone_number}' created successfully.")
+        return group_data.get("data", {}).get("id")
     else:
-        print(f"Failed to create group '{group_name}'. Status code: {response.status_code}")
+        print(f"Failed to create group '{phone_number}'. Status code: {response.status_code}")
         print(response.json())
         return None
 
-# def upload_file(user_key, file_name, data, group_cid):
-#     """Uploads starting files for a user to Pinata and returns its CID."""
-#     json_bytes = json.dumps(data, indent=4).encode("utf-8")
-#     json_io = io.BytesIO(json_bytes)
+def upload_file(file_name, data, group_id):
+    print(f"Uploading file: {file_name} to group: {group_id}")
+    keyvalues = {
+        key: json.dumps(value) if isinstance(value, dict) else value
+        for key, value in data.items()
+    }
 
-#     files = {"file": (file_name, json_io)}
+    metadata = {
+        "pinataMetadata": {
+            "name": file_name,
+            "keyvalues": keyvalues
+        }
+    }
 
-#     metadata = {
-#         "pinataMetadata": {
-#             "name": file_name,
-#             "keyvalues": {
-#                 "version": "1.0",
-#                 "description": f"User data for {user_key} - {file_name}"
-#             }
-#         }
-#     }
+    json_bytes = json.dumps(data, indent=4).encode("utf-8")
+    json_io = io.BytesIO(json_bytes)
+    files = {"file": (file_name, json_io)}
 
-#     response = requests.post(PINATA_UPLOAD_URL, headers=HEADERS, files=files, json={"pinataMetadata": json.dumps(metadata)})
+    url = "https://uploads.pinata.cloud/v3/files"
+    headers = {"Authorization": f"Bearer {PINATA_JWT}"}
 
-#     if response.status_code == 200:
-#         file_id = response.json().get("IpfsHash")
-#         print(f"File uploaded successfully. File ID: {file_id}")
+    try:
+        response = requests.post(url, headers=headers, files=files, json=metadata)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+        return None
 
-#         # put file in group
-#         url = f"https://api.pinata.cloud/groups/{group_cid}/cids"
-#         headers = {
-#             "Authorization": f"Bearer {PINATA_JWT}",
-#             "Content-Type": "application/json"
-#         }
-#         payload = {"cids": [file_id]}
+    if response.status_code == 200:
+        response_data = response.json()
+        file_id = response_data.get("data", {}).get("id")
+        file_cid = response_data.get("data", {}).get("cid")
+        print(f"File uploaded successfully. File ID: {file_id}, CID: {file_cid}")
 
-#         put_response = requests.request("PUT", url, json=payload, headers=headers)
+        url = f"https://api.pinata.cloud/v3/files/groups/{group_id}/ids/{file_id}"
+        headers = {"Authorization": f"Bearer {PINATA_JWT}"}
 
-#         if put_response.status_code == 200:
-#             print(f"File {file_id} added to group {group_cid} successfully.")
-#             return file_id
-#         else:
-#             print(f"Failed to add file {file_id} to group {group_cid}. Status code: {put_response.status_code}")
-#             return None
-#     else:
-#         print(f"Failed to upload file. Status code: {response.status_code}")
-#         print(response.json())
-#         return None
-    
-def create_and_upload(user_key, core_data):
-    group_id = create_group(user_key)
-    
-    core_data_id = upload_file(user_key, "core_data.json", core_data, group_cid)
-    index_id = upload_file(user_key, "index.json", index_data, group_cid)
+        try:
+            put_response = requests.request("PUT", url, headers=headers)
+            put_response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
 
-    if not core_data_id or not index_id:
-        print("Failed to upload all files.")
+        if put_response.status_code == 200:
+            print(f"File {file_id} added to group {group_id} successfully.")
+            return file_id, file_cid
+        else:
+            print(f"Failed to add file {file_id} to group {group_id}. Status code: {put_response.status_code}")
+            print(put_response.json())
+            return None
+    else:
+        print(f"Failed to upload file. Status code: {response.status_code}")
+        print(response.json())
         return None
     
+def create_and_upload(phone_number, core_data):
+    print(f"Creating and uploading for user key: {phone_number}")
+    group_id = create_group(phone_number)
+
+    if not group_id:
+        print("Failed to create group.")
+        return None
+
+    index_data = {}
+    
+    core_id, core_cid = upload_file("core.json", core_data, group_id)
+    index_id, index_cid = upload_file("index.json", index_data, group_id)
+
+    if not core_id or not index_id:
+        print("Failed to upload all files.")
+        return None
+
     return {
-        "groupd_cid": group_cid,
-        "core_data_cid": core_data_cid,
-        "index_cid": index_cid
+        group_id,
+        core_id,
+        core_cid,
+        index_id,
+        index_cid
     }
 
 # Testing
 if __name__ == "__main__":
-    # # create_and_upload(user_key, core_data)
-    # get_cids("0e7354ee-d6fe-4225-8cfe-8f136039df25")
-
-    create_group("test_group")
+    print("Starting test...")
+    group_id, core_id, core_cid, index_id, index_cid = create_and_upload("123123123", {"keys": "values"})
+    if group_id and core_id and core_cid and index_id and index_cid:
+        update_users_json("123123123", group_id, core_id, core_cid, index_id, index_cid)
+    else:
+        print("Test failed.")

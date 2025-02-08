@@ -22,19 +22,17 @@ def update_users_json(number, group_id, core_id, core_cid, index_id, index_cid):
     headers = {"Authorization": f"Bearer {PINATA_JWT}",
                "Content-Type": "application/json"}
 
-    keyvalues = {
-        "group_id": "ccccccccc",
-        "core_id": "0194e653-a9e8-71db-ad14-0bad6a0a1875",
-        "core_cid": "0194e653-a9e8-71db-ad14-0bad6a0a1875",
+    keyvalues[str(number)] = json.dumps({
+        "group_id": group_id,
+        "core_id": core_id,
+        "core_cid": core_cid,
         "index_id": index_id,
         "index_cid": index_cid
-    }
+    })
 
     payload = {
         "name": "users.json",
-        "keyvalues": {
-            number: json.dumps(keyvalues)
-        },
+        "keyvalues": keyvalues,
     }
     
     try:
@@ -121,7 +119,7 @@ if __name__ == "__main__":
     # else:
     #     print("Failed to create users.json")
     # update_users_json(id)
-    # get_user("0194e678-2232-70a6-82ff-03d8650550fa")
+    # get_user("0194e642-b33a-758e-badb-31b19cbbd6b1")
     update_users_json("2247707770", "0194e653-a9e8-71db-ad14-0bad6a0a1875", "0194e646-211c-7027-8728-ab3e3bb6de8c", "bafkreibazhtqmj5tuuvomxjmbfingfyytezx2qrpbhsj6xbvjyydndwa6u", "0194e653-ac2e-75c7-b76c-09f126f52e34", "bafkreicecnx2gvntm6fbcrvnc336qze6st5u7qq7457igegamd3bzkx7ri")
     pass
 
