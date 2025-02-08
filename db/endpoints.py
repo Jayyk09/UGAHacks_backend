@@ -1,5 +1,5 @@
 import os
-from manage_groups import create_and_upload
+from manage_groups import upload_file
 from manage_users import update_users_json, create_users_json, update_id_json
 from dotenv import load_dotenv
 import requests
@@ -7,19 +7,48 @@ import json
 
 load_dotenv()
 PINATA_JWT = os.getenv("PINATA_JWT")
+gateway = "jade-petite-jay-124.mypinata.cloud"
+key = "I0tNwmegF0rsCpXVDwG56jPb7yO46F4u3mZ_nQbW0hRLf36XDuip2lfEIhup5tto"
 
-def trying():
-    url = "https://gateway.pinata.cloud/ipfs/jade-petite-jay-124.mypinata.cloud/bafkreiby2q3b7afqhk76jvycycnfns7ngyljexcsp4j47mrcbbpirmy5mq"
+def delete_all():
+    """Fetch all pinned files and delete each by CID."""
+    
+    url = "https://api.pinata.cloud/data/pinList"
     headers = {"Authorization": f"Bearer {PINATA_JWT}"}
 
-    response = requests.request("GET", url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        print(data)
-        return data
-    else:
+    # Fetch pinned files
+    response = requests.get(url, headers=headers)
+
+    if response.status_code != 200:
         print(f"Failed to fetch files. Status code: {response.status_code}")
-        return None
+        return
+
+    data = response.json()
+    if "rows" not in data:
+        print("No files found.")
+        return
+
+    files = data["rows"]
+    
+    if not files:
+        print("No pinned files to delete.")
+        return
+
+    print(f"Found {len(files)} files. Deleting now...")
+
+    # Iterate through files and delete each by CID
+    for file in files:
+        cid = file.get("ipfs_pin_hash")
+        if cid:
+            delete_url = f"https://api.pinata.cloud/pinning/unpin/{cid}"
+            delete_response = requests.delete(delete_url, headers=headers)
+
+            if delete_response.status_code == 200:
+                print(f"Successfully deleted: {cid}")
+            else:
+                print(f"Failed to delete {cid}. Status code: {delete_response.status_code}")
+
+    print("Deletion process complete.")
 
 def get_all_files():
     url = "https://api.pinata.cloud/v3/files"
@@ -28,13 +57,14 @@ def get_all_files():
     response = requests.request("GET", url, headers=headers)
     if response.status_code == 200:
         files = response.json()
+        print(response.json())
         return files
     else:
         print(f"Failed to fetch files. Status code: {response.status_code}")
         return None
     
 def get_all_users():
-    files = fetch_all_files()
+    files = get_all_files()
     if not files:
         return None
     
@@ -55,7 +85,7 @@ def get_all_users():
     print(res)
 
 def get_files_by_number(number):
-    files = fetch_all_files()
+    files = get_all_files()
     if not files:
         return None
     
@@ -78,8 +108,8 @@ def get_files_by_number(number):
     return res
     
 
-def create_new_user(phone_number, core_data):
-    result = create_and_upload(phone_number, core_data)
+def create_new_user(name, age, weight, height, sex, address, dob, phone_number):
+    result = upload_file(name, age, weight, height, sex, address, dob, phone_number)
 
     core_id, core_cid = result
 
@@ -91,12 +121,26 @@ def setup_db():
     id = create_users_json({})
     update_id_json(id)
 
+def query():
+    url = "https://api.pinata.cloud/data/pinList"
+
+    querystring = {"metadata":"age"}
+
+    headers = {"Authorization": f"Bearer {PINATA_JWT}"}
+
+    response = requests.request("GET", url, headers=headers, params=querystring)
+
+    print(response.text)
+
 # Testing
 if __name__ == "__main__":
     # setup_db()
-    # create_new_user("224031230", {"keys": "valuesss"})
-    # fetch_all_files()
+    # create_new_user("beak", 2, 133, 65, "F", "add", "dobb", "111121",)
+    # get_all_files()
     # get_files_by_number("2240000")
     # get_all_users()
-    trying()
+    # trying()
+    # get_by_file("0194e712-969b-717b-8b92-dc2260b5c8fb")
+    # print(delete_all())
+    query()
 
