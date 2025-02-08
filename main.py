@@ -66,17 +66,20 @@ async def handle_webhook(request: Request):
         elif post_data["event"] == "call_ended":
             print("Call ended event", post_data)
         elif post_data["event"] == "call_analyzed":
-            print("Call analyzed event", post_data['call']['call_analysis']['custom_analysis_data']['food eaten'])
+            print("Call analyzed event", post_data['call']['transcript_object'])
             # Extract food items from the analysis
-            food_items = post_data['call']['call_analysis']['custom_analysis_data']['food eaten']
+            food_items = post_data['call']['call_analysis']['custom_analysis_data']['meals']
+            exercises = post_data['call']['call_analysis']['custom_analysis_data']['exercise']
+            medications = post_data['call']['call_analysis']['custom_analysis_data']['medications_taken']
+            
+            print(f"Food items: {food_items}")
+            print(f"Exercises: {exercises}")
+            print(f"medications_taken: {medications}")
             
             # TODO: Call Nutritionix API to get nutrition data for each food item
-            # This would involve:
-            # 1. Making API calls to Nutritionix for each food item
-            # 2. Processing the nutrition data
-            # 3. Storing or using the nutrition information as needed
-            food_info = get_food_info(food_items)
-            print(f"Food info: {food_info}")
+            if food_items != '':
+                food_info = get_food_info(food_items)
+                print(f"Food info: {food_info}")
         else:
             print("Unknown event", post_data["event"])
         return JSONResponse(status_code=200, content={"received": True})
