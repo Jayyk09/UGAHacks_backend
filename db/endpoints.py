@@ -1,6 +1,7 @@
 import os
 from .manage_groups import upload_file
 from .manage_users import update_users_json, create_users_json, update_id_json
+from .update import update_file
 from dotenv import load_dotenv
 import requests
 import json
@@ -57,8 +58,6 @@ def get_all_files():
     querystring = {"pageLimit":"1000", "status":"pinned"}
 
     response = requests.request("GET", url, headers=headers, params=querystring)
-
-    print(response.json())
 
     return response.json()
     
@@ -185,7 +184,7 @@ def get_all_user_info():
     res = []
     for user in users:
         cid = user.get("ipfs_pin_hash")
-        url = f"https://gateway.pinata.cloud/ipfns/{cid}"
+        url = f"https://jade-petite-jay-124.mypinata.cloud/ipfs/{cid}?pinataGatewayToken=41CG6KTS4EQVjBqsSa6xgx81DQ9UNQK1csJHRp058MFvgTFJn_9m9ERBFG4xHTRu"
 
         print(url)
         response = requests.get(url)
@@ -199,6 +198,29 @@ def get_all_user_info():
         res.append(user_data)
     return res
 
+def upload_call(number, data, date):
+    url = "https://api.pinata.cloud/pinning/pinJSONToIPFS"
+
+    payload = {
+        "pinataMetadata": {"name": f"{number}_{date}.json"},
+        "pinataContent": data
+    }
+    headers = {
+        "Authorization": f"Bearer {PINATA_JWT}",
+        "Content-Type": "application/json"
+    }
+
+    response = requests.request("POST", url, json=payload, headers=headers)
+
+    ipfs_hash = response.json()["IpfsHash"]
+    metadata = {
+        "date": date,
+        "type": "date",
+        "id": number
+    }
+
+    update_file(ipfs_hash, metadata)
+
 # Testing
 if __name__ == "__main__":
     # setup_db()
@@ -210,7 +232,7 @@ if __name__ == "__main__":
     # get_by_file("0194e712-969b-717b-8b92-dc2260b5c8fb")
     # print(delete_all())
     # query()
-    query_1 = [("type", "date"), ("id", "2052391306")]
+    # query_1 = [("type", "date"), ("id", "2052391306")]
     # query_2 = [("type", "date")]
 
     # filter_files_by_queries(query_1)
