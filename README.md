@@ -14,3 +14,6 @@ We spent a lot of time working with Pinata to ensure that our data was secure an
 It takes some time to get a fully working database for a complex use case such as this out of Pinata, so it is essential to dive into database design before focusing too heavily on frontend or AI agents.
 ## What's next for MedMonitor
 As more data becomes available for our product, higher quality insights can be derived, particularly relating to nutrition and exercise. We also plan on adding gamification to further motivate patients to achieve their health and wellness goals. 
+
+## Tools Used
+OpenAI, Pinata, NextJS, Python, Nutritionix API, FastAPI, Tailwind CSS, Auth0
