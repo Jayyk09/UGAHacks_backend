@@ -4,6 +4,7 @@ from .manage_users import update_users_json, create_users_json, update_id_json
 from dotenv import load_dotenv
 import requests
 import json
+from typing import List, Tuple, Optional
 
 load_dotenv()
 PINATA_JWT = os.getenv("PINATA_JWT")
@@ -198,4 +199,9 @@ if __name__ == "__main__":
     query_1 = [("type", "date"), ("id", "4703300803"), ("date", "2_12_25")]
     query_2 = [("date", None)]
 
-    filter_files_by_queries(query_1)
+    parsed_queries: List[Tuple[str, Optional[str]]] = []
+    for query in query_1:
+        key, sep, value = query.partition(":")
+        parsed_queries.append((key, value))
+
+    filter_files_by_queries(parsed_queries)

@@ -218,7 +218,7 @@ def schedule_call(request: CallRequest):
 async def filter_files(
     queries: List[str] = Query(...)
 ):
-    parsed_queries = List[Tuple[str, Optional[str]]] = []
+    parsed_queries: List[Tuple[str, Optional[str]]] = []
     for query in queries:
         key, sep, value = query.partition(":")
         parsed_queries.append((key, value))
