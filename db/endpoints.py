@@ -182,18 +182,18 @@ def query():
 def get_all_user_info():
     users = get_all_users()
 
-    print("hi")
-    print(users)
-    print("hi2")
-
     res = []
     for user in users:
         cid = user.get("ipfs_pin_hash")
-        print(cid)
-        url = f"https://gateway.pinata.cloud/ipfs/{cid}"
+        url = f"https://gateway.pinata.cloud/ipfns/{cid}"
+
+        print(url)
         response = requests.get(url)
         user_data = response.json()
 
+        print("hi")
+        print(user_data)
+        print("hi2")
         phone_number = user.get("metadata", {}).get("keyvalues", {}).get("id")
         user_data["phone_number"] = phone_number
         res.append(user_data)
@@ -213,5 +213,5 @@ if __name__ == "__main__":
     query_1 = [("type", "date"), ("id", "2052391306")]
     # query_2 = [("type", "date")]
 
-    filter_files_by_queries(query_1)
-    # get_all_users()
+    # filter_files_by_queries(query_1)
+    get_all_user_info()
