@@ -14,7 +14,7 @@ from custom_types import ConfigResponse, ResponseRequiredRequest
 from llm import LLMClient
 from nutritionix import get_exercise_info, get_food_info, get_macros, get_micros
 from typing import List, Optional, Tuple
-from db.endpoints import filter_files_by_queries, get_all_users
+from db.endpoints import filter_files_by_queries, get_all_user_info
 
 # Load environment variables
 load_dotenv(override=True)
@@ -25,7 +25,7 @@ app = FastAPI()
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # React frontend
+    allow_origins=["http://localhost:3000"],  # React frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -218,20 +218,24 @@ def schedule_call(request: CallRequest):
 async def filter_files(
     queries: List[str] = Query(...)
 ):
+    print("Received queries:", queries)
     parsed_queries: List[Tuple[str, Optional[str]]] = []
     for query in queries:
         key, sep, value = query.partition(":")
         parsed_queries.append((key, value))
+
+    print("Parsed queries:", parsed_queries)
     
     filtered_files = filter_files_by_queries(parsed_queries)
 
     return filtered_files
 
-@app.get("/get_all_users")
-async def fetch_all_users():
+@app.get("/get_user_info")
+async def fetch_user_info():
     try:
-        users = get_all_users()
-        return JSONResponse(status_code=200, content={"users": users})
+        print("Fetching user info")
+        users = get_all_user_info()
+        return users
     except Exception as e:
         print(f"Error fetching all users: {e}")
         return JSONResponse(status_code=500, content={"message": "Internal Server Error"})

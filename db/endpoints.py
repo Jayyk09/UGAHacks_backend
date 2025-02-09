@@ -54,9 +54,11 @@ def get_all_files():
 
     headers = {"Authorization": f"Bearer {PINATA_JWT}"}
 
-    response = requests.request("GET", url, headers=headers)
+    querystring = {"pageLimit":"1000", "status":"pinned"}
 
-    # print(response.json())
+    response = requests.request("GET", url, headers=headers, params=querystring)
+
+    print(response.json())
 
     return response.json()
     
@@ -79,12 +81,10 @@ import json
 def filter_files_by_queries(queries):
     """
     Filters files based on multiple key-value pairs inside keyvalues.
-
     Parameters:
         queries (list of tuples): A list of (key, value) pairs to filter by.
             - If value is None, it filters files where key exists.
             - If value is set, it filters files where key exists and matches the value.
-
     Returns:
         list: A list of filtered files.
     """
@@ -93,7 +93,7 @@ def filter_files_by_queries(queries):
         return []
 
     filtered_files = []
-    
+
     print(files_data)
     for file in files_data.get("rows", []):  # Loop through all files
         print(file)
@@ -101,6 +101,7 @@ def filter_files_by_queries(queries):
 
         match = True  # Assume file is a match unless proven otherwise
         for key, value in queries:
+            print(key, value, file)
             if key not in keyvalues:
                 match = False  # Key is missing, file does not match
                 break
@@ -178,6 +179,25 @@ def query():
 
     print(response.text)
 
+def get_all_user_info():
+    users = get_all_users()
+
+    print("hi")
+    print(users)
+    print("hi2")
+
+    res = []
+    for user in users:
+        cid = user.get("ipfs_pin_hash")
+        print(cid)
+        url = f"https://gateway.pinata.cloud/ipfs/{cid}"
+        response = requests.get(url)
+        print(response.text)
+        phone_number = user.get("metadata", {}).get("keyvalues", {}).get("id")
+        res.append((phone_number, response.json()))
+
+    return res
+
 # Testing
 if __name__ == "__main__":
     # setup_db()
@@ -189,8 +209,8 @@ if __name__ == "__main__":
     # get_by_file("0194e712-969b-717b-8b92-dc2260b5c8fb")
     # print(delete_all())
     # query()
-    query_1 = [("type", "date"), ("id", "4703300803"), ("date", "2_12_25")]
-    query_2 = [("date", None)]
+    query_1 = [("type", "date"), ("id", "2052391306")]
+    # query_2 = [("type", "date")]
 
-    # filter_files_by_queries(query_1)
-    get_all_users()
+    filter_files_by_queries(query_1)
+    # get_all_users()
