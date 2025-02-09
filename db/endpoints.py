@@ -51,17 +51,15 @@ def delete_all():
     print("Deletion process complete.")
 
 def get_all_files():
-    url = "https://api.pinata.cloud/v3/files"
+    url = "https://api.pinata.cloud/data/pinList"
+
     headers = {"Authorization": f"Bearer {PINATA_JWT}"}
 
     response = requests.request("GET", url, headers=headers)
-    if response.status_code == 200:
-        files = response.json()
-        print(response.json())
-        return files
-    else:
-        print(f"Failed to fetch files. Status code: {response.status_code}")
-        return None
+
+    # print(response.json())
+
+    return response.json()
     
 def get_all_users():
     files = get_all_files()
@@ -84,6 +82,44 @@ def get_all_users():
                 continue
     print(res)
 
+import json
+
+def filter_files_by_queries(queries):
+    """
+    Filters files based on multiple key-value pairs inside keyvalues.
+
+    Parameters:
+        queries (list of tuples): A list of (key, value) pairs to filter by.
+            - If value is None, it filters files where key exists.
+            - If value is set, it filters files where key exists and matches the value.
+
+    Returns:
+        list: A list of filtered files.
+    """
+    files_data = get_all_files()
+    if not files_data:
+        return []
+
+    filtered_files = []
+    
+    for file in files_data.get("rows", []):  # Loop through all files
+        keyvalues = file.get("metadata", {}).get("keyvalues", {})
+
+        match = True  # Assume file is a match unless proven otherwise
+        for key, value in queries:
+            if key not in keyvalues:
+                match = False  # Key is missing, file does not match
+                break
+            if value is not None and keyvalues[key] != value:
+                match = False  # Key exists but value does not match
+                break
+
+        if match:
+            filtered_files.append(file)
+
+    print(json.dumps(filtered_files, indent=4))  # Pretty print the results
+    return filtered_files
+
 def get_files_by_number(number):
     files = get_all_files()
     if not files:
@@ -104,12 +140,12 @@ def get_files_by_number(number):
                 print(f"Failed to parse JSON for file: {file['id']}")
                 continue
 
-    print(res[0][1])
+    print(res)
     return res
     
 
-def create_new_user(name, age, weight, height, sex, address, dob, phone_number):
-    result = upload_file(name, age, weight, height, sex, address, dob, phone_number)
+def create_new_user(name, age, weight, height, sex, address, phone_number):
+    result = upload_file(name, age, weight, height, sex, address, phone_number)
 
     core_id, core_cid = result
 
@@ -142,5 +178,8 @@ if __name__ == "__main__":
     # trying()
     # get_by_file("0194e712-969b-717b-8b92-dc2260b5c8fb")
     # print(delete_all())
-    query()
+    # query()
+    query_1 = [("type", "date"), ("id", "4703300803"), ("date", "2_12_25")]
+    query_2 = [("date", None)]
 
+    filter_files_by_queries(query_1)

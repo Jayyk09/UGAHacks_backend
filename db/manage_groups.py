@@ -10,9 +10,7 @@ from update import update_file
 load_dotenv()
 PINATA_JWT = os.getenv("PINATA_JWT")
 
-def upload_file(name, age, weight, height, sex, address, dob, phone_number):
-    file_name = "core.json"
-
+def upload_file(name, age, weight, height, sex, address, phone_number):
     # group_id = create_group(phone_number)
 
     # if not group_id:
@@ -51,8 +49,8 @@ def upload_file(name, age, weight, height, sex, address, dob, phone_number):
         "height": str(height),
         "sex": sex,
         "address": address,
-        "dob": dob,
-        "core": "core"
+        "core": "core",
+        "user_id": str(phone_number)
     }
 
     update_file(id, keyvalues)
