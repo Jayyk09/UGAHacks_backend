@@ -2,7 +2,7 @@ import requests
 import os
 import json
 from dotenv import load_dotenv
-from .fetch_id import fetch_id
+from fetch_id import fetch_id
 import io
 
 load_dotenv()

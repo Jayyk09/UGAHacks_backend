@@ -1,6 +1,6 @@
 import os
-from .manage_groups import upload_file
-from .manage_users import update_users_json, create_users_json, update_id_json
+from manage_groups import upload_file
+from manage_users import update_users_json, create_users_json, update_id_json
 from dotenv import load_dotenv
 import requests
 import json
@@ -66,20 +66,13 @@ def get_all_users():
         return None
     
     res = []
-    for file in files.get("data", {}).get("files", []):
-        keyvalues = file.get("keyvalues", {})
+    for file in files.get("rows", []):
+        keyvalues = file.get("metadata", {}).get("keyvalues", {})
         for key, val in keyvalues.items():
-            try:
-                parsed = json.loads(val)
-                core_id = parsed.get("core_id")
+            if key == "type" and val == "core":
+                res.append(file)
 
-                if core_id:
-                    res.append((key, core_id))
-
-            except json.JSONDecodeError:
-                print(f"Failed to parse JSON for file: {file['id']}")
-                continue
-    print(res)
+    return res
 
 import json
 
@@ -199,9 +192,5 @@ if __name__ == "__main__":
     query_1 = [("type", "date"), ("id", "4703300803"), ("date", "2_12_25")]
     query_2 = [("date", None)]
 
-    parsed_queries: List[Tuple[str, Optional[str]]] = []
-    for query in query_1:
-        key, sep, value = query.partition(":")
-        parsed_queries.append((key, value))
-
-    filter_files_by_queries(parsed_queries)
+    # filter_files_by_queries(query_1)
+    get_all_users()

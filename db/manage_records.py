@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 import json
 import io
-from .update import update_file
+from update import update_file
 
 # import os
 # from manage_groups import create_and_upload
