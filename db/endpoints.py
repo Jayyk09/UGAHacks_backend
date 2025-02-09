@@ -192,10 +192,11 @@ def get_all_user_info():
         print(cid)
         url = f"https://gateway.pinata.cloud/ipfs/{cid}"
         response = requests.get(url)
-        print(response.text)
-        phone_number = user.get("metadata", {}).get("keyvalues", {}).get("id")
-        res.append((phone_number, response.json()))
+        user_data = response.json()
 
+        phone_number = user.get("metadata", {}).get("keyvalues", {}).get("id")
+        user_data["phone_number"] = phone_number
+        res.append(user_data)
     return res
 
 # Testing
