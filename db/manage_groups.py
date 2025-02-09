@@ -3,8 +3,8 @@ import os
 from dotenv import load_dotenv
 import json
 import io
-from manage_users import update_users_json
-from update import update_file
+from .manage_users import update_users_json
+from .update import update_file
 
 # Load API key from .env file
 load_dotenv()
