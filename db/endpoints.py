@@ -7,8 +7,6 @@ import json
 
 load_dotenv()
 PINATA_JWT = os.getenv("PINATA_JWT")
-gateway = "jade-petite-jay-124.mypinata.cloud"
-key = "I0tNwmegF0rsCpXVDwG56jPb7yO46F4u3mZ_nQbW0hRLf36XDuip2lfEIhup5tto"
 
 def delete_all():
     """Fetch all pinned files and delete each by CID."""
@@ -102,7 +100,9 @@ def filter_files_by_queries(queries):
 
     filtered_files = []
     
+    print(files_data)
     for file in files_data.get("rows", []):  # Loop through all files
+        print(file)
         keyvalues = file.get("metadata", {}).get("keyvalues", {})
 
         match = True  # Assume file is a match unless proven otherwise
@@ -117,8 +117,24 @@ def filter_files_by_queries(queries):
         if match:
             filtered_files.append(file)
 
-    print(json.dumps(filtered_files, indent=4))  # Pretty print the results
-    return filtered_files
+    res = []
+    for file in filtered_files:
+        cid = file.get("ipfs_pin_hash")
+        url = f"https://gateway.pinata.cloud/ipfs/{cid}"
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            json_data = response.json()
+            res.append(json_data)
+
+    print(res)
+    return res
+
+    # print(json.dumps(filtered_files, indent=4))  # Pretty print the results
+
+    # for file in filtered_files:
+
+    # return filtered_files
 
 def get_files_by_number(number):
     files = get_all_files()
