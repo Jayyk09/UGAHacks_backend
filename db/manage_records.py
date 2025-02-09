@@ -225,27 +225,33 @@ number = '2052391306'
 # Get list of payload variables
 payload_dates = ["2_8_25", "2_9_25", "2_10_25", "2_11_25", "2_12_25"]
 
-# Loop through dates and create separate payloads
-# for date in payload_dates:
-#     payload = {
-#         "pinataOptions": {"cidVersion": 1},
-#         "pinataMetadata": {
-#             "name": f"{number}_{date}",
-#             "date": date
-#         },
-#         "pinataContent": {
-#             date: globals()[f"payload_{date}"]
-#         }
-#     }
+def create_payload_and_get_cid(date, phone_number, payload):
+    payload = {
+        "pinataOptions": {"cidVersion": 1},
+        "pinataMetadata": {
+            "name": f"{phone_number}_{date}",
+            "date": date
+        },
+        "pinataContent": {
+            date: payload
+        }
+    }
 
-#     headers = {
-#         "Authorization": f"Bearer {PINATA_JWT}", 
-#         "Content-Type": "application/json"
-#     }
+    headers = {
+        "Authorization": f"Bearer {PINATA_JWT}",
+        "Content-Type": "application/json" 
+    }
 
-#     response = requests.request("POST", url, json=payload, headers=headers)
-#     print(f"Response for {date}:")
-#     print(response.text)
+    response = requests.request("POST", url, json=payload, headers=headers)
+    response_json = response.json()
+    return response_json["IpfsHash"]
+
+# Create payloads and get CIDs for each date
+cids = []
+for date in payload_dates:
+    cid = create_payload_and_get_cid(date, number)
+    cids.append((cid, date))
+    print(f"CID for {date}: {cid}")
 
 hashes = [("bafkreibatkmdgeq7qsqm4j7zmtisoe4u7asrgemcczf25oe3kcqpab2d6e", "2_8_25"), ("bafkreihzy7ya3koshdsd3rohamwa3scnrsglvjqq53nyaeuon47rv5amja", "2_9_25"), ("bafkreiaz44hwjwqvpohfjazpxif6bm7kiwclh63etlle4uwnerl6kzh4bu", "2_10_25"), ("bafkreic52ip4h6x7ndhou3vj53pti7crd3o4nurm43k5h5coest6qz7lk4", "2_11_25"), ("bafkreibpjz3irmu2wa56ai37ysow5uxifnt2m7vkqyctiokfwyj3w6w6y4", "2_12_25")]
 
