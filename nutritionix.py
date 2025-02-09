@@ -252,3 +252,7 @@ def get_exercise_info(query="ran 3 miles"):
         return results
     except Exception as error:
         return {"error": str(error)}
+    
+if __name__ == "__main__":
+    print(get_food_info("3 apples"))
+    print(get_exercise_info("ran 3 miles"))

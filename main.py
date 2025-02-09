@@ -87,6 +87,27 @@ async def handle_webhook(request: Request):
             if exercises != '':
                 exercise_info = get_exercise_info(exercises)
                 print(f"Exercises: {exercise_info}")
+            
+            # Combine food items, exercises, and medications into a single JSON
+            # get the date from the post data and format as M_D_YY
+            
+            # get from number from post data and remove the +1
+            to_number = post_data['call']['to_number'].replace('+1', '')
+            date = datetime.now().strftime("%m_%d_%y")
+            daily_health_data = {
+                f"{date}": {
+                    "Food Info": food_info if food_items != '' else None,
+                    "Medications": medications != '',
+                    "Exercises": exercise_info if exercises != '' else None
+                }
+            }
+            print(f"Combined daily health data: {daily_health_data}")
+            print(f"From number: {to_number}")
+            print(f"Date: {date}")
+
+            
+
+            # Update the user's daily health data
         else:
             print("Unknown event", post_data["event"])
         return JSONResponse(status_code=200, content={"received": True})
