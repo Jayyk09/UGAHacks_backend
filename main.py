@@ -14,7 +14,7 @@ from custom_types import ConfigResponse, ResponseRequiredRequest
 from llm import LLMClient
 from nutritionix import get_exercise_info, get_food_info, get_macros, get_micros
 from typing import List, Optional, Tuple
-from db.endpoints import filter_files_by_queries, get_all_user_info
+from db.endpoints import filter_files_by_queries, get_all_user_info, upload_call
 
 # Load environment variables
 load_dotenv(override=True)
@@ -105,7 +105,7 @@ async def handle_webhook(request: Request):
             print(f"From number: {to_number}")
             print(f"Date: {date}")
 
-            
+            upload_call(to_number, daily_health_data, date)
 
             # Update the user's daily health data
         else:
