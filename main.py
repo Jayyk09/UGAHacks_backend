@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, Query
 from fastapi.websockets import WebSocketState
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -13,6 +13,8 @@ from retell import Retell
 from custom_types import ConfigResponse, ResponseRequiredRequest
 from llm import LLMClient
 from nutritionix import get_exercise_info, get_food_info, get_macros, get_micros
+from typing import List, Optional, Tuple
+from db.endpoints import filter_files_by_queries
 
 # Load environment variables
 load_dotenv(override=True)
@@ -212,4 +214,15 @@ def schedule_call(request: CallRequest):
     response = schedule_batch_call(request.from_number, request.name, request.tasks, request.trigger_timestamp)
     return {"status": "success", "data": response}
 
+@app.get("/filter_files")
+async def filter_files(
+    queries: List[str] = Query(...)
+):
+    parsed_queries = List[Tuple[str, Optional[str]]] = []
+    for query in queries:
+        key, sep, value = query.partition(":")
+        parsed_queries.append((key, value))
+    
+    filtered_files = filter_files_by_queries(parsed_queries)
 
+    return filtered_files
