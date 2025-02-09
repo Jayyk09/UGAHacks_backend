@@ -1,6 +1,6 @@
 import os
-from manage_groups import upload_file
-from manage_users import update_users_json, create_users_json, update_id_json
+from .manage_groups import upload_file
+from .manage_users import update_users_json, create_users_json, update_id_json
 from dotenv import load_dotenv
 import requests
 import json

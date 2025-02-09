@@ -14,7 +14,7 @@ from custom_types import ConfigResponse, ResponseRequiredRequest
 from llm import LLMClient
 from nutritionix import get_exercise_info, get_food_info, get_macros, get_micros
 from typing import List, Optional, Tuple
-from db.endpoints import filter_files_by_queries
+from db.endpoints import filter_files_by_queries, get_all_users
 
 # Load environment variables
 load_dotenv(override=True)
@@ -226,3 +226,12 @@ async def filter_files(
     filtered_files = filter_files_by_queries(parsed_queries)
 
     return filtered_files
+
+@app.get("/get_all_users")
+async def fetch_all_users():
+    try:
+        users = get_all_users()
+        return JSONResponse(status_code=200, content={"users": users})
+    except Exception as e:
+        print(f"Error fetching all users: {e}")
+        return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
